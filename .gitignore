@@ -1,0 +1,4 @@
+# プロジェクトの除外パス
+/dist/
+/node_modules/
+/voicevox_core/
