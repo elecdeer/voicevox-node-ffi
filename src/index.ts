@@ -1,47 +1,14 @@
-import { Library } from "ffi-napi";
 import * as fs from "fs";
 import ref from "ref-napi";
-import Struct from "ref-struct-di";
 
-const StructType = Struct(ref);
+import {
+  createVoicevoxCore,
+  VoicevoxAudioQueryOptions,
+  VoicevoxInitializeOptions,
+  VoicevoxSynthesisOptions,
+} from "./core";
 
-console.log("Hello World!");
-
-const VoicevoxInitializeOptions = StructType({
-  acceleration_mode: ref.types.int32,
-  cpu_num_threads: ref.types.int16,
-  load_all_models: ref.types.bool,
-  open_jtalk_dict_dir: ref.types.CString,
-});
-
-const VoicevoxAudioQueryOptions = StructType({
-  kana: ref.types.bool,
-});
-
-const VoicevoxSynthesisOptions = StructType({
-  enable_interrogative_upspeak: ref.types.bool,
-});
-
-const voicevox = Library("voicevox_core/libvoicevox_core.dylib", {
-  voicevox_get_version: ["string", []],
-  voicevox_initialize: ["int", [VoicevoxInitializeOptions]],
-  voicevox_load_model: ["int", ["int"]],
-  voicevox_audio_query: [
-    "int",
-    ["string", "int", VoicevoxAudioQueryOptions, ref.refType("string")],
-  ],
-  voicevox_synthesis: [
-    "int",
-    [
-      "string",
-      "int",
-      VoicevoxSynthesisOptions,
-      ref.refType("uint"),
-      ref.refType("uint8*"),
-    ],
-  ],
-  voicevox_wav_free: ["void", ["pointer"]],
-});
+const voicevox = createVoicevoxCore("voicevox_core/libvoicevox_core.dylib");
 
 console.log(voicevox.voicevox_get_version());
 
