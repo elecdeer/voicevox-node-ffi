@@ -1,9 +1,11 @@
 import { Library } from "ffi-napi";
 import * as fs from "fs";
+import ArrayDi from "ref-array-di";
 import ref from "ref-napi";
 import StructDi from "ref-struct-di";
 
-const Struct = StructDi(ref);
+const StructType = StructDi(ref);
+const ArrayType = ArrayDi(ref);
 
 export const VoicevoxResultCode = {
   /** 成功 */
@@ -34,7 +36,7 @@ export const VoicevoxResultCode = {
   VOICEVOX_RESULT_PARSE_KANA_ERROR: 12,
   /** 無効なAudioQuery */
   VOICEVOX_RESULT_INVALID_AUDIO_QUERY_ERROR: 13,
-};
+} as const;
 
 export const VoicevoxAccelerationMode = {
   /** 実行環境に合った適切なハードウェアアクセラレーションモードを選択する */
@@ -43,24 +45,24 @@ export const VoicevoxAccelerationMode = {
   VOICEVOX_ACCELERATION_MODE_CPU: 1,
   /** ハードウェアアクセラレーションモードを"GPU"に設定する */
   VOICEVOX_ACCELERATION_MODE_GPU: 2,
-};
+} as const;
 
-export const VoicevoxAudioQueryOptions = Struct({
+export const VoicevoxAudioQueryOptions = StructType({
   kana: ref.types.bool,
 });
 
-export const VoicevoxInitializeOptions = Struct({
+export const VoicevoxInitializeOptions = StructType({
   acceleration_mode: ref.types.int,
   cpu_num_threads: ref.types.int16,
   load_all_models: ref.types.bool,
   open_jtalk_dict_dir: ref.types.CString,
 });
 
-export const VoicevoxSynthesisOptions = Struct({
+export const VoicevoxSynthesisOptions = StructType({
   enable_interrogative_upspeak: ref.types.bool,
 });
 
-export const VoicevoxTtsOptions = Struct({
+export const VoicevoxTtsOptions = StructType({
   kana: ref.types.bool,
   enable_interrogative_upspeak: ref.types.bool,
 });
@@ -76,16 +78,16 @@ export const createVoicevoxCore = (dylibPath: string) => {
       "int",
       ["string", "uint32", VoicevoxAudioQueryOptions, ref.refType("string")],
     ],
-    voicevox_audio_query_json_free: ["void", ["string"]],
+    voicevox_audio_query_json_free: ["void", ["void*"]],
     voicevox_decode: [
       "int",
       [
-        "uint*",
-        "uint*",
-        "float*",
-        "float*",
         "uint32",
-        ref.refType("uint*"),
+        "uint32",
+        ArrayType("float"),
+        ArrayType("float"),
+        "uint32",
+        ref.refType("uint"),
         ref.refType("float*"),
       ],
     ],
@@ -97,7 +99,7 @@ export const createVoicevoxCore = (dylibPath: string) => {
     voicevox_get_version: ["string", []],
     voicevox_initialize: ["int", [VoicevoxInitializeOptions]],
     voicevox_is_gpu_mode: ["bool", []],
-    voicevox_is_model_loaded: ["bool", []],
+    voicevox_is_model_loaded: ["bool", ["uint32"]],
     voicevox_load_model: ["int", ["uint32"]],
     voicevox_make_default_audio_query_options: [VoicevoxAudioQueryOptions, []],
     voicevox_make_default_initialize_options: [VoicevoxInitializeOptions, []],
@@ -106,10 +108,10 @@ export const createVoicevoxCore = (dylibPath: string) => {
     voicevox_predict_duration: [
       "int",
       [
-        "uint*",
-        "int64*",
         "uint32",
-        ref.refType("uint*"),
+        ArrayType("int64"),
+        "uint32",
+        ref.refType("uint"),
         ref.refType("float*"),
       ],
     ],
@@ -117,15 +119,15 @@ export const createVoicevoxCore = (dylibPath: string) => {
     voicevox_predict_intonation: [
       "int",
       [
-        "uint*",
-        "int64*",
-        "int64*",
-        "int64*",
-        "int64*",
-        "int64*",
-        "int64*",
         "uint32",
-        ref.refType("uint*"),
+        ArrayType("int64"),
+        ArrayType("int64"),
+        ArrayType("int64"),
+        ArrayType("int64"),
+        ArrayType("int64"),
+        ArrayType("int64"),
+        "uint32",
+        ref.refType("uint"),
         ref.refType("float*"),
       ],
     ],
@@ -150,6 +152,6 @@ export const createVoicevoxCore = (dylibPath: string) => {
         ref.refType("uint8*"),
       ],
     ],
-    voicevox_wav_free: ["void", ["uint8*"]],
+    voicevox_wav_free: ["void", ["void*"]],
   });
 };
